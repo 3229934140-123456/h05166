@@ -1,0 +1,29 @@
+{
+  "id": "order_processing",
+  "name": "订单处理流程(含并行网关)",
+  "nodes": [
+    {"id": "start", "name": "开始", "type": "startEvent"},
+    {"id": "create_order", "name": "创建订单", "type": "serviceTask", "service": "create_order"},
+    {"id": "fork_processing", "name": "并行处理开始", "type": "parallelGateway"},
+    {"id": "payment", "name": "支付处理", "type": "serviceTask", "service": "process_payment"},
+    {"id": "inventory", "name": "库存扣减", "type": "serviceTask", "service": "deduct_inventory"},
+    {"id": "shipping", "name": "物流调度", "type": "userTask", "assignee": "warehouse"},
+    {"id": "join_processing", "name": "并行处理结束", "type": "parallelGateway"},
+    {"id": "wait_delivery", "name": "等待发货", "type": "timerEvent", "duration": "2s"},
+    {"id": "send_confirmation", "name": "发送确认", "type": "serviceTask", "service": "send_confirmation"},
+    {"id": "end", "name": "结束", "type": "endEvent"}
+  ],
+  "flows": [
+    {"id": "f1", "source": "start", "target": "create_order"},
+    {"id": "f2", "source": "create_order", "target": "fork_processing"},
+    {"id": "f3a", "source": "fork_processing", "target": "payment"},
+    {"id": "f3b", "source": "fork_processing", "target": "inventory"},
+    {"id": "f3c", "source": "fork_processing", "target": "shipping"},
+    {"id": "f4a", "source": "payment", "target": "join_processing"},
+    {"id": "f4b", "source": "inventory", "target": "join_processing"},
+    {"id": "f4c", "source": "shipping", "target": "join_processing"},
+    {"id": "f5", "source": "join_processing", "target": "wait_delivery"},
+    {"id": "f6", "source": "wait_delivery", "target": "send_confirmation"},
+    {"id": "f7", "source": "send_confirmation", "target": "end"}
+  ]
+}

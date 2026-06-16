@@ -1,0 +1,27 @@
+{
+  "id": "leave_approval",
+  "name": "请假审批流程",
+  "nodes": [
+    {"id": "start", "name": "开始", "type": "startEvent"},
+    {"id": "apply", "name": "提交请假申请", "type": "userTask", "assignee": "employee"},
+    {"id": "gateway_days", "name": "天数判断", "type": "exclusiveGateway", "default": "f_leader"},
+    {"id": "leader_approve", "name": "主管审批", "type": "userTask", "assignee": "leader"},
+    {"id": "hr_approve", "name": "HR审批", "type": "userTask", "assignee": "hr"},
+    {"id": "gateway_result", "name": "审批结果", "type": "exclusiveGateway", "default": "f_end"},
+    {"id": "notify_reject", "name": "通知拒绝", "type": "serviceTask", "service": "send_reject_notification"},
+    {"id": "notify_approve", "name": "通知通过", "type": "serviceTask", "service": "send_approve_notification"},
+    {"id": "end", "name": "结束", "type": "endEvent"}
+  ],
+  "flows": [
+    {"id": "f1", "source": "start", "target": "apply"},
+    {"id": "f2", "source": "apply", "target": "gateway_days"},
+    {"id": "f_leader", "source": "gateway_days", "target": "leader_approve", "condition": "days <= 3", "name": "3天以内"},
+    {"id": "f_hr", "source": "gateway_days", "target": "hr_approve", "condition": "days > 3", "name": "超过3天"},
+    {"id": "f3", "source": "leader_approve", "target": "gateway_result"},
+    {"id": "f4", "source": "hr_approve", "target": "gateway_result"},
+    {"id": "f_reject", "source": "gateway_result", "target": "notify_reject", "condition": "approved == False", "name": "拒绝"},
+    {"id": "f_approve", "source": "gateway_result", "target": "notify_approve", "condition": "approved == True", "name": "通过"},
+    {"id": "f_end_reject", "source": "notify_reject", "target": "end"},
+    {"id": "f_end_approve", "source": "notify_approve", "target": "end"}
+  ]
+}
